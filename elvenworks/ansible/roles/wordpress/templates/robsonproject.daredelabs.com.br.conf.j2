@@ -1,0 +1,77 @@
+server {
+  listen 80;
+  listen [::]:80;
+  server_name robsonproject.daredelabs.com.br daredelabs.com.br;
+  root /var/www/html/wordpress/;
+  index index.php index.html index.htm index.nginx-debian.html;
+
+  access_log /var/log/nginx/blog_access.log;
+  error_log /var/log/nginx/blog_error.log;
+
+
+  location / {
+    try_files $uri $uri/ /index.php;
+  }
+
+  location ~ ^/wp-json/ {
+     rewrite ^/wp-json/(.*?)$ /?rest_route=/$1 last;
+  }
+
+  location ~* /wp-sitemap.*\.xml {
+    try_files $uri $uri/ /index.php$is_args$args;
+  }
+
+  error_page 404 /404.html;
+  error_page 500 502 503 504 /50x.html;
+
+  client_max_body_size 20M;
+
+  location = /50x.html {
+    root /usr/share/nginx/html;
+  }
+
+  location ~ \.php$ {
+    #try_files $uri =404;
+    #fastcgi_split_path_info ^(.+\.php)(/.+)$;
+    #fastcgi_index index.php;
+    #fastcgi_param HTTPS on;
+    #fastcgi_pass unix:/run/php-fpm/www.sock;
+
+    fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    include fastcgi_params;
+    include snippets/fastcgi-php.conf;
+  }
+
+  #location /wordpress {
+  #  proxy_pass https://1.1.1.1:443;
+  #  proxy_set_header Host $http_host;
+  #  proxy_set_header X-Forwarded-Host $http_host;
+  #  proxy_set_header X-Real-IP $remote_addr;
+  #  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  #  proxy_set_header X-Forwarded-Proto https;
+  #  proxy_set_header HTTPS "on";
+  #}
+
+  #enable gzip compression
+  gzip on;
+  gzip_vary on;
+  gzip_min_length 1000;
+  gzip_comp_level 5;
+  gzip_types application/json text/css application/x-javascript application/javascript image/svg+xml;
+  gzip_proxied any;
+
+  # A long browser cache lifetime can speed up repeat visits to your page
+  location ~* \.(jpg|jpeg|gif|png|webp|svg|woff|woff2|ttf|css|js|ico|xml)$ {
+       access_log        off;
+       log_not_found     off;
+       expires           360d;
+  }
+
+  # disable access to hidden files
+  location ~ /\.ht {
+      access_log off;
+      log_not_found off;
+      deny all;
+  }
+}

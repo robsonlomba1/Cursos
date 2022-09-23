@@ -1,0 +1,1 @@
+Projeto de implementação de Wordpress com Auto Scaling Group, RDS e Memcache com Ansible e Terraform na AWS.

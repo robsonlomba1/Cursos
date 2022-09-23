@@ -1,0 +1,59 @@
+---
+  - name: Instalando pacotes para a aplicacao
+    apt:
+      name:
+      - nginx
+      - unzip
+      - php7.4-zip
+      - php-imagick
+      - php7.4-curl
+      - php7.4-fpm
+      - php7.4-mbstring
+      - php7.4-cli
+      - php7.4-bcmath
+      - php7.4-xml
+      - php7.4-mysql
+      - php7.4-common
+      - php7.4-gd
+      - php7.4-json
+      - mysql-client
+      update_cache: yes
+
+
+  - name: Configurando o vhosts com templates
+    template:
+      src: robsonproject.daredelabs.com.br.conf.j2
+      dest: /etc/nginx/sites-enabled/default
+
+  - name: Download do projeto wordpress
+    ansible.builtin.unarchive:
+      src: https://wordpress.org/latest.zip
+      dest: /var/www/html/
+      remote_src: yes 
+ 
+  - name: Permissao
+    ansible.builtin.file:
+      path: /var/www/html/wordpress
+      owner: www-data
+      group: www-data
+      mode: '0755'
+  
+  - name: Arquivo de configuracao wordpress
+    template:
+      src: wp-config.php.j2
+      dest: /var/www/html/wordpress/wp-config.php  
+
+#  - name: Criando arquivo index
+#    template:
+#      src: index.html.j2
+#      dest: /var/www/html/wordpress/index.html
+
+  - name: Restart nginx
+    service:
+      name: nginx
+      state: restarted
+
+  - name: Restart php7.4-fpm
+    service:
+      name: php7.4-fpm
+      state: restarted                        
