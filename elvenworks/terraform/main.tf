@@ -13,9 +13,6 @@ provider "aws" {
     region = var.region
     shared_credentials_file = ".aws/credentials"
     profile = "awsterraform"
-#    access_key    = "ASIAY5O3"
-#    secret_key    = "CCgCoFqjDyQS1/"
-#    token         = "IQoJb3JzdGkfMDlKMDoKxnh+J4IgALTERZYG7KrbrkgqPDjmObTbrKz6ttRwR87WXhkMRx+vlAk="
  }
 
 resource "aws_security_group" "robson-project-web" {
@@ -64,9 +61,10 @@ resource "aws_instance" "robson-project-app" {
 
   user_data = <<-EOF
   #!/bin/bash		
-  apt update -y && apt install curl ansible unzip git software-properties-common -y
+  sudo su
   add-apt-repository ppa:ondrej/php -y && apt update -y
-
+  apt update -y && apt install curl ansible unzip git software-properties-common -y
+  
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
   unzip awscliv2.zip
   sudo ./aws/install
@@ -130,7 +128,7 @@ resource "aws_db_instance" "default" {
   instance_class          = "db.t3.micro"
   db_name                 = "wordpress"
   username                = "wpuser"
-  password                = "Wp-123@mudar"
+  password                = "Wp-123mudar"
  # db_subnet_group_name    = var.subnet_id_aws_instance[0]
   parameter_group_name    = "default.mysql5.7"
   skip_final_snapshot     = true
@@ -291,16 +289,32 @@ resource "aws_ami_from_instance" "robson-project-ami" {
 }
 
 resource "aws_launch_configuration" "robson-project-launch-config" {
-  name          = "robson-project-launch-config"
-  image_id      = aws_ami_from_instance.robson-project-ami.id
-  instance_type = var.type_aws_instance
+  name                        = "robson-project-launch-config"
+  image_id                    = aws_ami_from_instance.robson-project-ami.id
+  instance_type               = var.type_aws_instance
+  key_name                    = var.key_aws_instance
+  user_data                   = <<-EOF
+  #!/bin/bash		
+  sudo su
+  add-apt-repository ppa:ondrej/php -y && apt update -y
+  apt update -y && apt install curl ansible unzip git software-properties-common -y
+  
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  unzip awscliv2.zip
+  sudo ./aws/install
+    
+  cd /opt && git clone https://github.com/robsonlomba1/Cursos.git && cd ./Cursos/elvenworks/ansible/
+  ansible-playbook wordpress.yml
+  EOF
+
 }
 
 resource "aws_autoscaling_group" "robson-project-asg" {
   name                 = "robson-project-asg"
   launch_configuration = aws_launch_configuration.robson-project-launch-config.name
   min_size             = 1
-  max_size             = 2
+  max_size             = 3
+  desired_capacity     = 1
   vpc_zone_identifier  = var.subnet_id_aws_instance
 
   lifecycle {
