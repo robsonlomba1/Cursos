@@ -2,8 +2,6 @@
   - name: wordpress
     hosts: localhost
     become: yes
-    #    connection: local
 
     roles:
- #     - mysql-server
       - wordpress

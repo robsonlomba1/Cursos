@@ -43,11 +43,6 @@
       src: wp-config.php.j2
       dest: /var/www/html/wordpress/wp-config.php  
 
-#  - name: Criando arquivo index
-#    template:
-#      src: index.html.j2
-#      dest: /var/www/html/wordpress/index.html
-
   - name: Restart nginx
     service:
       name: nginx
